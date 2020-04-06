@@ -4,6 +4,7 @@ using Microsoft.Azure.Services.AppAuthentication;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Common
@@ -15,6 +16,8 @@ namespace Common
 
     public class KeyVaultAccessor : ICredentialAccessor
     {
+        private const string keyVaultUrlRegexPattern = @"^https://[a-zA-Z0-9\-]+.vault.azure.net/?$";
+        
         private readonly KeyVaultClient keyVaultClient;
         private readonly string keyVaultUrl;
 
@@ -29,6 +32,12 @@ namespace Common
             keyVaultClient = new KeyVaultClient(
                 new KeyVaultClient.AuthenticationCallback(
                     azureServiceTokenProvider.KeyVaultTokenCallback));
+
+            var regex = new Regex(keyVaultUrlRegexPattern);
+            if (!regex.IsMatch(keyVaultUrl))
+            {
+                throw new ArgumentException(nameof(keyVaultUrl));
+            }
             this.keyVaultUrl = keyVaultUrl;
             this.logger = logger;
         }
