@@ -7,6 +7,7 @@ using static Google.Apis.Customsearch.v1.CseResource;
 using System.Net;
 using System.Globalization;
 using System.IO;
+using Common;
 
 namespace Core
 {
@@ -20,37 +21,52 @@ namespace Core
         private readonly CustomsearchService service;
         private readonly string searchEngineId;
 
-        public GoogleApiImageClient(string apiKey, string searchEngineId)
+        private readonly ILogger logger;
+
+        public GoogleApiImageClient(string apiKey, string searchEngineId, ILogger logger)
         {
             service = new CustomsearchService(new BaseClientService.Initializer
             {
                 ApiKey = apiKey
             });
             this.searchEngineId = searchEngineId;
+            this.logger = logger;
         }
 
         public async Task<IEnumerable<DownloadedImage>> GetImages(string query, int count)
         {
+            await logger.LogInfo($"Generating request for {count} image{(count > 1 ? "s" : "")} of {query}");
             var request = GetRequest(query, count);
 
-            var response = await request.ExecuteAsync();
             var images = new List<DownloadedImage>();
-            var order = 0;
-            foreach (var item in response.Items)
+            try
             {
-                var image = new DownloadedImage
-                {
-                    Name = GetImageName(query, ++order),
-                    FileFormat = item.Mime,
-                    Link = new Uri(item.Link)
-                };
+                await logger.LogInfo($"Executing request for {count} image{(count > 1 ? "s" : "")} of {query}");
+                var response = await request.ExecuteAsync();
+                await logger.LogInfo($"Response received. Generating results for {response.Items.Count} image{(response.Items.Count > 1 ? "s" : "")}");
 
-                using (var webClient = new WebClient())
+                var order = 0;
+                foreach (var item in response.Items)
                 {
-                    image.Content = webClient.DownloadData(image.Link);
+                    var image = new DownloadedImage
+                    {
+                        Name = GetImageName(query, ++order),
+                        FileFormat = item.Mime,
+                        Link = new Uri(item.Link)
+                    };
+
+                    using (var webClient = new WebClient())
+                    {
+                        image.Content = webClient.DownloadData(image.Link);
+                    }
+
+                    images.Add(image);
+                    await logger.LogInfo(image.ToString());
                 }
-
-                images.Add(image);
+            }
+            catch (Exception e)
+            {
+                await logger.LogError(e);
             }
 
             return images;
@@ -62,6 +78,7 @@ namespace Core
             request.Cx = searchEngineId;
             request.Num = count;
             request.SearchType = ListRequest.SearchTypeEnum.Image;
+            request.Safe = ListRequest.SafeEnum.Active;
             return request;
         }
 

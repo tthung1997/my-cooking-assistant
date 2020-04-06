@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Core
 {
@@ -8,5 +9,12 @@ namespace Core
         public Uri Link { get; set; }
         public string FileFormat { get; set; }
         public byte[] Content { get; set; }
+
+        public bool ShouldSerializeContent() => false;
+
+        public override string ToString()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
     }
 }
