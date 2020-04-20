@@ -21,9 +21,10 @@ namespace Core
         private readonly CustomsearchService service;
         private readonly string searchEngineId;
 
+        private readonly string loggingSource;
         private readonly ILogger logger;
 
-        public GoogleApiImageClient(string apiKey, string searchEngineId, ILogger logger)
+        public GoogleApiImageClient(string apiKey, string searchEngineId, ILogger logger, string loggingSource = "GoogleApiImageClient")
         {
             service = new CustomsearchService(new BaseClientService.Initializer
             {
@@ -31,19 +32,20 @@ namespace Core
             });
             this.searchEngineId = searchEngineId;
             this.logger = logger;
+            this.loggingSource = loggingSource;
         }
 
         public async Task<IEnumerable<DownloadedImage>> GetImages(string query, int count)
         {
-            await logger.LogInfo($"Generating request for {count} image{(count > 1 ? "s" : "")} of {query}");
+            await logger.LogInfo(loggingSource, $"Generating request for {count} image{(count > 1 ? "s" : "")} of {query}");
             var request = GetRequest(query, count);
 
             var images = new List<DownloadedImage>();
             try
             {
-                await logger.LogInfo($"Executing request for {count} image{(count > 1 ? "s" : "")} of {query}");
+                await logger.LogInfo(loggingSource, $"Executing request for {count} image{(count > 1 ? "s" : "")} of {query}");
                 var response = await request.ExecuteAsync();
-                await logger.LogInfo($"Response received. Generating results for {response.Items.Count} image{(response.Items.Count > 1 ? "s" : "")}");
+                await logger.LogInfo(loggingSource, $"Response received. Generating results for {response.Items.Count} image{(response.Items.Count > 1 ? "s" : "")}");
 
                 var order = 0;
                 foreach (var item in response.Items)
@@ -61,12 +63,12 @@ namespace Core
                     }
 
                     images.Add(image);
-                    await logger.LogInfo(image.ToString());
+                    await logger.LogInfo(loggingSource, image.ToString());
                 }
             }
             catch (Exception e)
             {
-                await logger.LogError(e);
+                await logger.LogError(loggingSource, e);
             }
 
             return images;
