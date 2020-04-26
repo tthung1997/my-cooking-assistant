@@ -21,6 +21,8 @@ jobs:
       run: dotnet restore --packages .\packages
     - name: Build
       run: dotnet build --configuration Release --no-restore
+    - name: Get dotnet path
+      run: dotnet --info
     - name: Test
       run: dotnet test --no-restore --verbosity normal -s .\Tests\.runsettings --filter TestCategory=Bvt
     - name: Code coverage
