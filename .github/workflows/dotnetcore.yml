@@ -21,8 +21,6 @@ jobs:
       run: dotnet restore --packages .\packages
     - name: Build
       run: dotnet build --configuration Release --no-restore
-    - name: Get dotnet path
-      run: dotnet --info
     - name: Test
       run: dotnet test --no-restore --verbosity normal -s .\Tests\.runsettings --filter TestCategory=Bvt
     - name: Code coverage
@@ -30,5 +28,5 @@ jobs:
       env: 
         CODECOV_UPLOAD_TOKEN: ${{ secrets.CodeCovUploadToken }}
       run: |
-        .\packages\opencover\4.7.922\tools\OpenCover.Console.exe -register -target:dotnet -targetargs:"test --no-restore --verbosity normal -s ./Tests/.runsettings --filter TestCategory=Bvt" -output:".\MyProject_coverage.xml" -oldstyle
+        .\packages\opencover\4.7.922\tools\OpenCover.Console.exe -register -target:"C:/Program Files/dotnet/dotnet.exe" -targetargs:"test --no-restore --verbosity normal -s ./Tests/.runsettings --filter TestCategory=Bvt" -output:".\MyProject_coverage.xml" -oldstyle
         .\packages\codecov\1.10.0\tools\codecov.exe -f ".\MyProject_coverage.xml" -t "%CODECOV_UPLOAD_TOKEN%"
