@@ -33,8 +33,9 @@ namespace AzureUtilsTests
         }
 
         [TestMethod]
-        public void SuccessfullyCreateContainerTest()
+        public void UnitTest1()
         {
+
         }
 
         private string GetTestParameter(string key)

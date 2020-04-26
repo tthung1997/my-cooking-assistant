@@ -6,3 +6,6 @@
 **/bin
 **/obj
 /Certificates
+MyProject_coverage.xml
+RunCodeCoverage.cmd
+UploadCodeCoverage.cmd

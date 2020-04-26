@@ -19,11 +19,11 @@ namespace Common
 
     public class Cryptographer : ICryptographer
     {
-        private const int RsaEncryptionLength = 256;
+        private const int RsaEncryptionLength = 512;
         private const int HashLength = 32;
         private const int ThumbprintLength = 40;
         private const int IVLength = 16;
-        private const int AesKeyLength = 128;
+        private const int AesKeyLength = 32;
 
         private readonly string loggingSource;
         private readonly ILogger logger;
@@ -34,23 +34,34 @@ namespace Common
 
         public Cryptographer(byte[] encryptedAesKey, byte[] encryptedAesIV, X509Certificate2 rsaCert, ILogger logger, string loggingSource = "Cryptographer")
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
             this.loggingSource = loggingSource;
-            this.logger = logger;
-
-            if (rsaCert == null)
-            {
-                throw new ArgumentNullException(nameof(rsaCert));
-            }
-            this.rsaCert = rsaCert;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.rsaCert = rsaCert ?? throw new ArgumentNullException(nameof(rsaCert));
 
             encryptedAesKey.IsNullOrEmpty().Throws(new ArgumentNullException(nameof(encryptedAesKey)), logger, loggingSource);
             encryptedAesIV.IsNullOrEmpty().Throws(new ArgumentNullException(nameof(encryptedAesIV)), logger, loggingSource);
             aesKey = RsaDecrypt(encryptedAesKey).Result;
             aesIV = RsaDecrypt(encryptedAesIV).Result;
+        }
+
+        public static byte[] GenerateAesKey(X509Certificate2 encryptionCert)
+        {
+            var newKey = Utils.GenerateByteArray(AesKeyLength);
+            using (var rsa = encryptionCert.GetRSAPublicKey())
+            {
+                var encryptedKey = rsa.Encrypt(newKey, RSAEncryptionPadding.OaepSHA1);
+                return encryptedKey;
+            }
+        }
+
+        public static byte[] GenerateAesIV(X509Certificate2 encryptionCert)
+        {
+            var newIV = Utils.GenerateByteArray(IVLength);
+            using (var rsa = encryptionCert.GetRSAPublicKey())
+            {
+                var encryptedIV = rsa.Encrypt(newIV, RSAEncryptionPadding.OaepSHA1);
+                return encryptedIV;
+            }
         }
 
         public async Task<byte[]> AesDecrypt(byte[] encryptedContent)
