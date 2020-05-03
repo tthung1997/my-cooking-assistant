@@ -19,11 +19,15 @@ namespace AzureUtils
 
         public AzureBlobStorage(string connectionString, string containerName, ICryptographer cryptographer, ILogger logger, string loggingSource = "AzureBlobStorage")
         {
+            string.IsNullOrEmpty(connectionString).Throws(new ArgumentNullException(nameof(connectionString)), logger, loggingSource);
+            string.IsNullOrEmpty(containerName).Throws(new ArgumentNullException(nameof(containerName)), logger, loggingSource);
+            (cryptographer == null).Throws(new ArgumentNullException(nameof(cryptographer)), logger, loggingSource);
+            (logger == null).Throws(new ArgumentNullException(nameof(logger)));
+
             this.logger = logger;
             this.loggingSource = loggingSource;
             this.cryptographer = cryptographer;
-            CloudStorageAccount storageAccount;
-            if (CloudStorageAccount.TryParse(connectionString, out storageAccount))
+            if (CloudStorageAccount.TryParse(connectionString, out CloudStorageAccount storageAccount))
             {
                 var client = storageAccount.CreateCloudBlobClient();
                 container = client.GetContainerReference(containerName);
@@ -106,8 +110,9 @@ namespace AzureUtils
                 await logger.LogInfo(loggingSource, $"Uploading file {fileName}");
                 var blob = container.GetBlockBlobReference(fileName);
                 await logger.LogInfo(loggingSource, $"Encrypting file {fileName} of {content.Length} { (content.Length > 1).ToPlural("byte") }");
-                await blob.UploadFromByteArrayAsync(content, 0, content.Length);
-                await logger.LogInfo(loggingSource, $"File {fileName} of {content.Length} { (content.Length > 1).ToPlural("byte") } uploaded to blob storage at {blob.Uri}");
+                byte[] encryptedContent = await cryptographer.AesEncrypt(content);
+                await blob.UploadFromByteArrayAsync(encryptedContent, 0, encryptedContent.Length);
+                await logger.LogInfo(loggingSource, $"File {fileName} of {encryptedContent.Length} { (encryptedContent.Length > 1).ToPlural("byte") } uploaded to blob storage at {blob.Uri}");
                 return true;
             }
             catch (Exception ex)

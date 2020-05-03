@@ -14,6 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Codecov" Version="1.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="Moq" Version="4.14.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" />
     <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
     <PackageReference Include="OpenCover" Version="4.7.922" />
@@ -21,6 +22,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\AzureUtils\AzureUtils.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="certs\mca-test.ht.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
