@@ -8,6 +8,7 @@ using NuGet.Frameworks;
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -36,9 +37,8 @@ namespace AzureUtilsTests
                 testContextInstance = value;
             }
         }
-        
-        [TestInitialize]
-        public void Initialize()
+
+        public void Initialize(string category)
         {
             logger = new Mock<ILogger>();
             storageConnectionString = GetTestParameter("storageConnectionString");
@@ -49,23 +49,28 @@ namespace AzureUtilsTests
             cryptographer = new Cryptographer(encryptedAesKey, encryptedAesIV, cryptoCertificate, logger.Object);
 
             // remove existing container with the same name
-            if (CloudStorageAccount.TryParse(storageConnectionString, out CloudStorageAccount storageAccount))
+            if (category == "DevOnly")
             {
-                CloudBlobClient client = storageAccount.CreateCloudBlobClient();
-                CloudBlobContainer container = client.GetContainerReference(containerName);
-                container.DeleteIfExistsAsync().Wait();
+                if (CloudStorageAccount.TryParse(storageConnectionString, out CloudStorageAccount storageAccount))
+                {
+                    CloudBlobClient client = storageAccount.CreateCloudBlobClient();
+                    CloudBlobContainer container = client.GetContainerReference(containerName);
+                    container.DeleteIfExistsAsync().Wait();
+                }
             }
         }
 
-        [TestCleanup]
-        public void CleanUp()
+        public void CleanUp(string category)
         {
             // remove existing container with the same name
-            if (CloudStorageAccount.TryParse(storageConnectionString, out CloudStorageAccount storageAccount))
+            if (category == "DevOnly")
             {
-                CloudBlobClient client = storageAccount.CreateCloudBlobClient();
-                CloudBlobContainer container = client.GetContainerReference(containerName);
-                container.DeleteIfExistsAsync().Wait();
+                if (CloudStorageAccount.TryParse(storageConnectionString, out CloudStorageAccount storageAccount))
+                {
+                    CloudBlobClient client = storageAccount.CreateCloudBlobClient();
+                    CloudBlobContainer container = client.GetContainerReference(containerName);
+                    container.DeleteIfExistsAsync().Wait();
+                }
             }
         }
 
@@ -73,6 +78,7 @@ namespace AzureUtilsTests
         [TestCategory("Bvt")]
         public void InvalidConnectionStringTest()
         {
+            Initialize("Bvt");
             // null connection string
             try
             {
@@ -105,12 +111,14 @@ namespace AzureUtilsTests
             {
                 Assert.AreEqual("Failed to parse connection string to storage account", ae.Message);
             }
+            CleanUp("Bvt");
         }
 
         [TestMethod]
         [TestCategory("Bvt")]
         public void NullContainerNameTest()
         {
+            Initialize("Bvt");
             // null container name
             try
             {
@@ -132,12 +140,14 @@ namespace AzureUtilsTests
             {
                 Assert.AreEqual("Value cannot be null. (Parameter 'containerName')", ane.Message);
             }
+            CleanUp("Bvt");
         }
 
         [TestMethod]
         [TestCategory("Bvt")]
         public void NullCryptographerTest()
         {
+            Initialize("Bvt");
             try
             {
                 AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, null, logger.Object);
@@ -147,12 +157,14 @@ namespace AzureUtilsTests
             {
                 Assert.AreEqual("Value cannot be null. (Parameter 'cryptographer')", ane.Message);
             }
+            CleanUp("Bvt");
         }
 
         [TestMethod]
         [TestCategory("Bvt")]
         public void NullLoggerTest()
         {
+            Initialize("Bvt");
             try
             {
                 AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, null);
@@ -162,12 +174,14 @@ namespace AzureUtilsTests
             {
                 Assert.AreEqual("Value cannot be null. (Parameter 'logger')", ane.Message);
             }
+            CleanUp("Bvt");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public void NewContainerTest()
         {
+            Initialize("DevOnly");
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
             CloudBlobClient client = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer container = client.GetContainerReference(containerName);
@@ -176,12 +190,14 @@ namespace AzureUtilsTests
             new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
 
             Assert.IsTrue(container.ExistsAsync().Result, "Test container should be created.");
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task UploadAndDownloadFileTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             string fileName = "TestFile";
             byte[] fileContent = Utils.GenerateByteArray(1000);
@@ -190,43 +206,51 @@ namespace AzureUtilsTests
             Assert.IsTrue(await storage.FileExists(fileName));
             byte[] downloadedContent = await storage.DownloadFile(fileName);
             Assert.IsTrue(downloadedContent.SequenceEqual(fileContent));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task UploadInvalidFileNameTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             byte[] fileContent = Utils.GenerateByteArray(1000);
             Assert.IsFalse(await storage.UploadFile(null, fileContent));
             Assert.IsFalse(await storage.UploadFile("", fileContent));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task UploadInvalidContentTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             string fileName = "TestFile";
             Assert.IsFalse(await storage.UploadFile(fileName, null));
             Assert.IsFalse(await storage.UploadFile(fileName, new byte[0]));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task DownloadNotExistFileTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             string fileName = "TestFile";
             Assert.IsFalse(await storage.FileExists(fileName));
             byte[] downloadedContent = await storage.DownloadFile(fileName);
             Assert.AreEqual(0, downloadedContent.Length);
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task DownloadInvalidFileNameTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             // null file name
             byte[] downloadedContent = await storage.DownloadFile(null);
@@ -235,36 +259,42 @@ namespace AzureUtilsTests
             // empty file name
             downloadedContent = await storage.DownloadFile("");
             Assert.AreEqual(0, downloadedContent.Length);
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task FileExistsTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             string fileName = "TestFile";
             byte[] fileContent = Utils.GenerateByteArray(1000);
             Assert.IsFalse(await storage.FileExists(fileName));
             Assert.IsTrue(await storage.UploadFile(fileName, fileContent));
             Assert.IsTrue(await storage.FileExists(fileName));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task FileExistsWithInvalidFileNameTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             // null file name
             Assert.IsFalse(await storage.FileExists(null));
 
             // empty file name
             Assert.IsFalse(await storage.FileExists(""));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task DeleteExistFileTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             string fileName = "TestFile";
             byte[] fileContent = Utils.GenerateByteArray(1000);
@@ -272,28 +302,33 @@ namespace AzureUtilsTests
             Assert.IsTrue(await storage.FileExists(fileName));
             Assert.IsTrue(await storage.DeleteFile(fileName));
             Assert.IsFalse(await storage.FileExists(fileName));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task DeleteNotExistFileTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             string fileName = "TestFile";
             Assert.IsFalse(await storage.FileExists(fileName));
             Assert.IsTrue(await storage.DeleteFile(fileName));
+            CleanUp("DevOnly");
         }
 
         [TestMethod]
         [TestCategory("DevOnly")]
         public async Task DeleteInvalidFileNameTest()
         {
+            Initialize("DevOnly");
             AzureBlobStorage storage = new AzureBlobStorage(storageConnectionString, containerName, cryptographer, logger.Object);
             // null file name
             Assert.IsTrue(await storage.DeleteFile(null));
 
             // empty file name
             Assert.IsTrue(await storage.DeleteFile(""));
+            CleanUp("DevOnly");
         }
 
         private string GetTestParameter(string key)
