@@ -47,12 +47,11 @@ namespace Core
                 var response = await request.ExecuteAsync();
                 await logger.LogInfo(loggingSource, $"Response received. Generating results for {response.Items.Count} image{(response.Items.Count > 1 ? "s" : "")}");
 
-                var order = 0;
                 foreach (var item in response.Items)
                 {
                     var image = new DownloadedImage
                     {
-                        Name = GetImageName(query, ++order),
+                        Id = Guid.NewGuid(),
                         FileFormat = item.Mime,
                         Link = new Uri(item.Link)
                     };
@@ -82,17 +81,6 @@ namespace Core
             request.SearchType = ListRequest.SearchTypeEnum.Image;
             request.Safe = ListRequest.SafeEnum.Active;
             return request;
-        }
-
-        private string GetImageName(string query, int order)
-        {
-            var imgName = query;
-            foreach (var c in Path.GetInvalidFileNameChars())
-            {
-                imgName.Replace($"{c}", "");
-            }
-            imgName = $"{new CultureInfo("en-US", false).TextInfo.ToTitleCase(query.ToLower()).Replace(" ", "")}-{order}";
-            return imgName;
         }
     }
 }
