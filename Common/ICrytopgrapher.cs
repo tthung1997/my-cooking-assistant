@@ -70,9 +70,9 @@ namespace Common
             var aes = Aes.Create();
             await logger.LogInfo(loggingSource, $"Creating AES decryptor for decryption");
             var decryptor = aes.CreateDecryptor(aesKey, aesIV);
-            await logger.LogInfo(loggingSource, $"Start decrypting content of length {encryptedContent.Length} { (encryptedContent.Length > 1).ToPlural("byte") } using AES");
+            await logger.LogInfo(loggingSource, $"Start decrypting content of length {encryptedContent.Length} { "byte".ToPlural(encryptedContent.Length > 1) } using AES");
             var decryptedContent = decryptor.TransformFinalBlock(encryptedContent, 0, encryptedContent.Length);
-            await logger.LogInfo(loggingSource, $"Finished decrypting. The decrypted text is {decryptedContent.Length} { (decryptedContent.Length > 1).ToPlural("byte") }");
+            await logger.LogInfo(loggingSource, $"Finished decrypting. The decrypted text is {decryptedContent.Length} { "byte".ToPlural(decryptedContent.Length > 1) }");
             return decryptedContent;
         }
 
@@ -82,19 +82,19 @@ namespace Common
             var aes = Aes.Create();
             await logger.LogInfo(loggingSource, $"Creating AES encryptor for encryption");
             var encryptor = aes.CreateEncryptor(aesKey, aesIV);
-            await logger.LogInfo(loggingSource, $"Start encrypting content of length {content.Length} { (content.Length > 1).ToPlural("byte") } using AES");
+            await logger.LogInfo(loggingSource, $"Start encrypting content of length {content.Length} { "byte".ToPlural(content.Length > 1) } using AES");
             var encryptedContent = encryptor.TransformFinalBlock(content, 0, content.Length);
-            await logger.LogInfo(loggingSource, $"Finished encrypting. The cipher is {encryptedContent.Length} { (encryptedContent.Length > 1).ToPlural("byte") }");
+            await logger.LogInfo(loggingSource, $"Finished encrypting. The cipher is {encryptedContent.Length} { "byte".ToPlural(encryptedContent.Length > 1) }");
             return encryptedContent;
         }
 
         public async Task<byte[]> Hash(byte[] content)
         {
             content.IsNullOrEmpty().Throws(new ArgumentNullException(nameof(content)), logger, loggingSource);
-            await logger.LogInfo(loggingSource, $"Start hasing content of length {content.Length} { (content.Length > 1).ToPlural("byte") }");
+            await logger.LogInfo(loggingSource, $"Start hasing content of length {content.Length} { "byte".ToPlural(content.Length > 1) }");
             var sha256 = SHA256.Create();
             var hashedContent = sha256.ComputeHash(content);
-            await logger.LogInfo(loggingSource, $"Finished hasing. The content hash is {hashedContent.Length} { (hashedContent.Length > 1).ToPlural("byte") }");
+            await logger.LogInfo(loggingSource, $"Finished hasing. The content hash is {hashedContent.Length} { "byte".ToPlural(hashedContent.Length > 1) }");
             return hashedContent;
         }
 
@@ -103,9 +103,9 @@ namespace Common
             encryptedContent.IsNullOrEmpty().Throws(new ArgumentNullException(nameof(encryptedContent)), logger, loggingSource);
             using (var rsa = rsaCert.GetRSAPrivateKey())
             {
-                await logger.LogInfo(loggingSource, $"Start decrypting content of length {encryptedContent.Length} { (encryptedContent.Length > 1).ToPlural("byte") } using RSA.");
+                await logger.LogInfo(loggingSource, $"Start decrypting content of length {encryptedContent.Length} { "byte".ToPlural(encryptedContent.Length > 1) } using RSA.");
                 var decryptedContent = rsa.Decrypt(encryptedContent, RSAEncryptionPadding.OaepSHA1);
-                await logger.LogInfo(loggingSource, $"Finished decrypting. The decrypted text is {decryptedContent.Length} { (decryptedContent.Length > 1).ToPlural("byte") }");
+                await logger.LogInfo(loggingSource, $"Finished decrypting. The decrypted text is {decryptedContent.Length} { "byte".ToPlural(decryptedContent.Length > 1) }");
                 return decryptedContent;
             }
         }
@@ -115,9 +115,9 @@ namespace Common
             content.IsNullOrEmpty().Throws(new ArgumentNullException(nameof(content)), logger, loggingSource);
             using (var rsa = rsaCert.GetRSAPublicKey())
             {
-                await logger.LogInfo(loggingSource, $"Start encrypting content of length {content.Length} { (content.Length > 1).ToPlural("byte") } using RSA.");
+                await logger.LogInfo(loggingSource, $"Start encrypting content of length {content.Length} { "byte".ToPlural(content.Length > 1) } using RSA.");
                 var encryptedContent = rsa.Encrypt(content, RSAEncryptionPadding.OaepSHA1);
-                await logger.LogInfo(loggingSource, $"Finished encrypting. The cipher is {encryptedContent.Length} { (encryptedContent.Length > 1).ToPlural("byte") }");
+                await logger.LogInfo(loggingSource, $"Finished encrypting. The cipher is {encryptedContent.Length} { "byte".ToPlural(encryptedContent.Length > 1) }");
                 return encryptedContent;
             }
         }

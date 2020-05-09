@@ -89,10 +89,10 @@ namespace AzureUtils
                     {
                         await blob.DownloadToStreamAsync(ms);
                         var encryptedContent = ms.ToArray();
-                        await logger.LogInfo(loggingSource, $"File {fileName} downloaded from blob storage. Length: {fileContent.Length} { (fileContent.Length > 1).ToPlural("byte") }");
+                        await logger.LogInfo(loggingSource, $"File {fileName} downloaded from blob storage. Length: {fileContent.Length} { "byte".ToPlural(fileContent.Length > 1) }");
                         await logger.LogInfo(loggingSource, $"Decrypting file {fileName}.");
                         fileContent = await cryptographer.AesDecrypt(encryptedContent);
-                        await logger.LogInfo(loggingSource, $"File {fileName} decrypted. Length: {fileContent.Length} { (fileContent.Length > 1).ToPlural("byte") }");
+                        await logger.LogInfo(loggingSource, $"File {fileName} decrypted. Length: {fileContent.Length} { "byte".ToPlural(fileContent.Length > 1) }");
                     }
                 }
             }
@@ -109,10 +109,10 @@ namespace AzureUtils
             {
                 await logger.LogInfo(loggingSource, $"Uploading file {fileName}");
                 var blob = container.GetBlockBlobReference(fileName);
-                await logger.LogInfo(loggingSource, $"Encrypting file {fileName} of {content.Length} { (content.Length > 1).ToPlural("byte") }");
+                await logger.LogInfo(loggingSource, $"Encrypting file {fileName} of {content.Length} { "byte".ToPlural(content.Length > 1) }");
                 byte[] encryptedContent = await cryptographer.AesEncrypt(content);
                 await blob.UploadFromByteArrayAsync(encryptedContent, 0, encryptedContent.Length);
-                await logger.LogInfo(loggingSource, $"File {fileName} of {encryptedContent.Length} { (encryptedContent.Length > 1).ToPlural("byte") } uploaded to blob storage at {blob.Uri}");
+                await logger.LogInfo(loggingSource, $"File {fileName} of {encryptedContent.Length} { "byte".ToPlural(encryptedContent.Length > 1) } uploaded to blob storage at {blob.Uri}");
                 return true;
             }
             catch (Exception ex)

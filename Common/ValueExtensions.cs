@@ -10,7 +10,7 @@ namespace Common
     {
         #region String
 
-        public static string ToPlural(this bool condition, string word)
+        public static string ToPlural(this string word, bool condition)
         {
             var pluralizer = new Pluralizer();
             return (condition && pluralizer.IsSingular(word)) ? new Pluralizer().Pluralize(word) : word;

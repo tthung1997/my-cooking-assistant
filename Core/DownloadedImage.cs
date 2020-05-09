@@ -8,6 +8,7 @@ namespace Core
         public Guid Id { get; set; }
         public Uri Link { get; set; }
         public string FileFormat { get; set; }
+        public DateTime DownloadedDateTime { get; set; }
         public byte[] Content { get; set; }
 
         public bool ShouldSerializeContent() => false;
