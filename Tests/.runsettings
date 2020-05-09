@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <TestRunParameters>
+    <Parameter name="storageConnectionString" value="STORAGE-CONNECTION-STRING" />
+    <Parameter name="googleApiKey" value="GOOGLE-API-KEY" />
+    <Parameter name="googleSearchEngineId" value="GOOGLE-SEARCH-ENGINE-ID" />
+  </TestRunParameters>
+</RunSettings>
