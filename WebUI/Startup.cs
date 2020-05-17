@@ -38,6 +38,14 @@ namespace WebUI
             services.AddTransient<IEmailSender, EmailSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration);
 
+            services.AddAuthentication()
+                .AddGoogle(googleOptions =>
+                {
+                    googleOptions.ClientId = Configuration["Authentication:Google:ClientId"];
+                    googleOptions.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+                    googleOptions.AccessDeniedPath = "/";
+                });
+
             services.AddControllersWithViews();
             services.AddRazorPages();
         }
